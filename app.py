@@ -5,6 +5,7 @@ import numpy as np
 
 from visualization import plot_simulation_video  # make sure this returns fig
 from effects import body_sim
+from mitigation import strategy
 
 external_stylesheets = [
 	"""https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap""",
@@ -100,7 +101,7 @@ def run_simulation(n_clicks, xspeed, yspeed, zspeed, distance, size, angle, z_an
     elif type == "Icy":
         dtype = "icy"
     else :
-        pass          
+        dtype = ""                
       
     if rtype == "Rubble":
             rubble = True
@@ -114,7 +115,8 @@ def run_simulation(n_clicks, xspeed, yspeed, zspeed, distance, size, angle, z_an
     
     aster = {
     "size_m" : size,
-    "speed_km_s" : sped
+    "speed_km_s" : sped,
+    "distance_km" : distance
     }
     energy, imp_rad = body_sim(aster)
     tnt = energy // 4184000000
@@ -134,9 +136,11 @@ def run_simulation(n_clicks, xspeed, yspeed, zspeed, distance, size, angle, z_an
     elif energy > 10000000000:
     	eve = ev["10000000000"] 
     else :
-    	eve = "a well....... firecracker"    
+    	eve = "a well....... firecracker?"
+    		
+    strat = strategy(aster, dtype = dtype, rubble = rubble)    
     
-    txt = f"Impact Effects :- \n Kinetic Energy of the Asteroid : {energy:.2e} which is equal to {tnt:.2e} tons of tnt. \n This is more energy than {eve}. \n Impact Radius : {imp_rad:.2f}. \n Impact Location : {imp_locgen} {imp_loc}. \n No. of People instantly killed in the blast radius : {affected}. Final State of the Asteroid : {stat}"
+    txt = f"Impact Effects :- \n Kinetic Energy of the Asteroid : {energy:.2e} which is equal to {tnt:.2e} tons of tnt. \n This is more energy than {eve}. \n Impact Radius : {imp_rad:.2f}. \n Impact Location : {imp_locgen} {imp_loc}. \n No. of People instantly killed in the blast radius : {affected}. Final State of the Asteroid : {strat}"
     return fig, txt
     
 @app.callback(
