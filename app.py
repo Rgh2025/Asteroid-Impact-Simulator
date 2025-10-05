@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 import numpy as np
 
 from visualization import plot_simulation_video  # make sure this returns fig
+from effects import body_sim
 
 external_stylesheets = [
 	"""https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap""",
@@ -21,13 +22,13 @@ app.layout = html.Div(style = {"backgroundColor" : "#FFFFFF","backgroundImage" :
 	#The various page components
     html.Div([
         html.Label("Speed (km/s) in x direction", style = {"fontFamily" : "Montserrat, sans-serif", "textAlign" : "center", "border" : "solid #333333 1.5px"}),
-        dcc.Input(id="xspeed", type="number", value=3, style = {"backgroundColor" : "#00BBBB"}),
+        dcc.Input(id="xspeed", type="number", value=2, style = {"backgroundColor" : "#00BBBB"}),
         
         html.Label("Speed (km/s) in y direction", style = {"fontFamily" : "Montserrat, sans-serif", "textAlign" : "center", "border" : "solid #333333 1.5px"}),
-        dcc.Input(id="yspeed", type="number", value=3, style = {"backgroundColor" : "#00BBBB"}),
+        dcc.Input(id="yspeed", type="number", value=2, style = {"backgroundColor" : "#00BBBB"}),
         
         html.Label("Speed (km/s) in z direction", style = {"fontFamily" : "Montserrat, sans-serif", "textAlign" : "center", "border" : "solid #333333 1.5px"}),
-        dcc.Input(id="zspeed", type="number", value=3, style = {"backgroundColor" : "#00BBBB"}),
+        dcc.Input(id="zspeed", type="number", value=2, style = {"backgroundColor" : "#00BBBB"}),
         
         html.Label("Distance (km)", style = {"fontFamily" : "Montserrat, sans-serif", "textAlign" : "center", "border" : "solid #333333 1.5px"}),
         dcc.Input(id="distance", type="number", value=20000, style = {"backgroundColor" : "#00BBBB"}),
@@ -83,8 +84,9 @@ def run_simulation(n_clicks, xspeed, yspeed, zspeed, distance, size, angle, z_an
     	return go.Figure(), ""       
 
 #Setting the parameters for the visualization function
+    sped = np.sqrt(xspeed ** 2 + yspeed ** 2 + zspeed ** 2)
     asteroid = {
-        "speed_km_s": np.sqrt(xspeed ** 2 + yspeed ** 2 + zspeed ** 2),
+        "speed_km_s": sped,
         "x_sp": xspeed,
         "y_sp": yspeed,
         "z_sp": zspeed,
@@ -106,9 +108,15 @@ def run_simulation(n_clicks, xspeed, yspeed, zspeed, distance, size, angle, z_an
             rubble = False        
             
     #Generate figure using our function
-    fig, energy, imp_rad, imp_loc, imp_locgen, affected = plot_simulation_video(
-        asteroid, angle_deg=angle, z_angle_deg=z_angle, body_d=size, dtype = dtype, time = time, rubble
+    imp_loc, imp_locgen, affected, stat, fig= plot_simulation_video(
+        asteroid, angle_deg=angle, z_angle_deg=z_angle, body_d=size, dtype = dtype, time = time, rubble = rubble
     )
+    
+    aster = {
+    "size_m" : size,
+    "speed_km_s" : sped
+    }
+    energy, imp_rad = body_sim(aster)
     tnt = energy // 4184000000
     
     ev = {
@@ -128,7 +136,7 @@ def run_simulation(n_clicks, xspeed, yspeed, zspeed, distance, size, angle, z_an
     else :
     	eve = "a well....... firecracker"    
     
-    txt = f"Impact Effects \n Kinetic Energy of the Asteroid : {energy} which is equal to {tnt:.2e} tons of tnt. This is more energy than {eve} \n Impact Radius : {imp_rad} \n Impact Location : {imp_locgen}, {imp_loc} \n No. of People instantly killed in the blast radius : {affected}"
+    txt = f"Impact Effects :- \n Kinetic Energy of the Asteroid : {energy:.2e} which is equal to {tnt:.2e} tons of tnt. \n This is more energy than {eve}. \n Impact Radius : {imp_rad:.2f}. \n Impact Location : {imp_locgen} {imp_loc}. \n No. of People instantly killed in the blast radius : {affected}. Final State of the Asteroid : {stat}"
     return fig, txt
     
 @app.callback(
