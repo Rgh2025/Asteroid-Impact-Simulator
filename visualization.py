@@ -70,7 +70,7 @@ def asteroid_trajectory_gravity(speed_kms, x_sp, y_sp, z_sp, angle_deg, z_angle_
 
     return np.array(xs), np.array(ys), np.array(zs), dt
 
-def plot_simulation_video(asteroid, angle_deg=45, z_angle_deg=45, steps=300, body_d=500, dtype = None, time = 0, rubble=False, return_fig=False):
+def plot_simulation_video(asteroid, angle_deg=45, z_angle_deg=45, steps=300, body_d=500, dtype = None, time = 0, rubble=False, return_fig=True):
     #3D asteroid impact simulation with animation
     earth_radius = 6371	
     
@@ -190,7 +190,7 @@ def plot_simulation_video(asteroid, angle_deg=45, z_angle_deg=45, steps=300, bod
             buttons=[dict(label="Play",
                           method="animate",
                           args=[None, dict(frame=dict(duration=0.5, redraw=True),
-                                           fromcurrent=True, mode="immediate")])]), dict(type = "buttons", showactive = False, x = 1.05, y = 0.9, xanchor = "right", yanchor = "top", 
+                                           fromcurrent=True, mode="immediate")])]), dict(type = "buttons", showactive = False, x = 1.05, y = 0.8, xanchor = "right", yanchor = "top", 
                                            buttons = [dict(label = "Pause",
                                            method = "animate",
                                            args = [[None], dict(frame=dict(duration=0, redraw=False), mode="immediate")])])]
@@ -203,13 +203,7 @@ def plot_simulation_video(asteroid, angle_deg=45, z_angle_deg=45, steps=300, bod
     )
     
     
-    aster = {
-    "size_m" : body_d,
-    "speed_km_s" : asteroid["speed_km_s"]
-    }
-    energy, imp_rad = body_sim(aster)
-    
-    pop_data = tiffy.imread("/storage/emulated/0/Download/__pycache__/testsim/testsim2/popdata.tif")
+    #pop_data = tiffy.imread("/storage/emulated/0/Download/__pycache__/testsim/testsim2/popdata.tif")
     
     x, y, z = x_traj[-1], y_traj[-1], z_traj[-1]
     r = np.sqrt(x**2 + y**2 + z**2)
@@ -223,45 +217,54 @@ def plot_simulation_video(asteroid, angle_deg=45, z_angle_deg=45, steps=300, bod
     imp_lat = imp_lat - delta
     imp_lon = imp_lon - delta    
     
-    lat_arr = np.linspace(-90, 90, pop_data.shape[0])
-    lon_arr = np.linspace(-180, 180, pop_data.shape[1])
-    lat_grid, lon_grid = np.meshgrid(lat_arr, lon_arr, indexing = "ij")
-    
-    def haversine(lat1, lon1, lat2, lon2):
-    	lat1_rad = np.radians(lat1)
-    	lat2_rad = np.radians(lat2)
-    	lon1_rad = np.radians(lon1)
-    	lon2_rad = np.radians(lon2)
-    	
-    	dlat = lat2_rad - lat1_rad
-    	dlon = lon2_rad - lon1_rad
-    	
-    	a = np.sin(dlat/2)**2 + np.cos(lat1_rad) * np.cos(lat2_rad) * np.sin(dlon/2)**2
-    	c = 2 * np.arcsin(np.sqrt(a))
-    	return 6371 * c
-    	
-    def pop_within_rad(imp_lat, imp_lon, lat_grid, lon_grid, pop_data, imp_rad):
-    	distances = haversine(imp_lat, imp_lon, lat_grid, lon_grid)
-    	masking = distances <= imp_rad
-    	return np.sum(pop_data[masking])
-    
-    affected = pop_within_rad(imp_lat, imp_lon, lat_grid, lon_grid, pop_data, imp_rad)
-    #affected = ""
+    #lat_arr = np.linspace(-90, 90, pop_data.shape[0])
+#    lon_arr = np.linspace(-180, 180, pop_data.shape[1])
+#    lat_grid, lon_grid = np.meshgrid(lat_arr, lon_arr, indexing = "ij")
+#    
+#    def haversine(lat1, lon1, lat2, lon2):
+#    	lat1_rad = np.radians(lat1)
+#    	lat2_rad = np.radians(lat2)
+#    	lon1_rad = np.radians(lon1)
+#    	lon2_rad = np.radians(lon2)
+#    	
+#    	dlat = lat2_rad - lat1_rad
+#    	dlon = lon2_rad - lon1_rad
+#    	
+#    	a = np.sin(dlat/2)**2 + np.cos(lat1_rad) * np.cos(lat2_rad) * np.sin(dlon/2)**2
+#    	c = 2 * np.arcsin(np.sqrt(a))
+#    	return 6371 * c
+#    	
+#    def pop_within_rad(imp_lat, imp_lon, lat_grid, lon_grid, pop_data, imp_rad):
+#    	distances = haversine(imp_lat, imp_lon, lat_grid, lon_grid)
+#    	masking = distances <= imp_rad
+#    	return np.sum(pop_data[masking])
+#    
+#    affected = pop_within_rad(imp_lat, imp_lon, lat_grid, lon_grid, pop_data, imp_rad)
+    affected = "Unknown (Working on it!)"
     im = abs(imp_lon)
     iml = abs(imp_lat)
     imp_loc = f"{im}"
-    imp_loc += "°W" if imp_lon < 0 else ""
-    imp_loc += "°E" if imp_lon > 0 else ""
+    imp_loc += "°W " if imp_lon < 0 else ""
+    imp_loc += "°E " if imp_lon > 0 else ""
     imp_loc += "° " if imp_lon == 0 else ""
     imp_loc += str(iml)
-    imp_loc += "°S" if imp_lat < 0 else ""
-    imp_loc += "°N" if imp_lat > 0 else ""
-    imp_loc += "°" if imp_lat == 0 else ""
+    imp_loc += "°S " if imp_lat < 0 else ""
+    imp_loc += "°N " if imp_lat > 0 else ""
+    imp_loc += "° " if imp_lat == 0 else ""
     imp_locgen = ""
+    stat = ""
+    
+    if r <= 6371:
+    	stat = "Impact"
+    else:
+    	if r - 6371 < 3000:
+    		stat = "Miss. Phew! That was a close one."
+    	else:
+    		stat = "Miss. Phew!"
 
     if return_fig:
-        return fig, energy, imp_rad, imp_loc, imp_locgen, affected
-    else:
-        fig.show(renderer="browser")
+        return imp_loc, imp_locgen, affected, stat, fig
+    #else:
+#        fig.show(renderer="browser")
 
-  
+	
