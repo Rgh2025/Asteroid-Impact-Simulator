@@ -1,5 +1,6 @@
+import numpy as np
 
-def params(asteroid, dtype = "default", rubble):
+def strategy(asteroid, dtype = "default", rubble = False):
 	# Calculate mass (assume density = 3000 kg/m^3, spherical)
     radius = asteroid["size_m"] / 2
     volume = (4/3) * np.pi * radius**3
@@ -54,3 +55,4 @@ def params(asteroid, dtype = "default", rubble):
 
     return strategy
 
+	
